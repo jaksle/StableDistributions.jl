@@ -1,6 +1,8 @@
 using StableDistributions
 using Test
 
-@testset "StableDistributions.jl" begin
-    # Write your tests here.
-end
+
+include("stable.jl")
+include("conversion.jl")
+include("convolution.jl")
+
