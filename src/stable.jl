@@ -172,7 +172,7 @@ function cdf(d::Stable{T}, x::Real) where T
     end
 end
 
-quantile(d::Stable, p::Real) = Distributions.quantile_newton(d,p)
+#quantile(d::Stable, p::Real) = Distributions.quantile_newton(d,p)
 
 @quantile_newton Stable
 
