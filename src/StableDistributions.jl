@@ -8,14 +8,16 @@ import QuadGK: quadgk
 import Distributions: @check_args, @distr_support, @quantile_newton,
     params, shape, location, scale, minimum, maximum,
     convert, convolve, +, *, partype, mean, var, skewness, kurtosis,
-    mgf, cf, pdf, logpdf, cdf, quantile, fit
+    quantile_newton, cquantile_newton, invlogcdf_newton, invlogccdf_newton,
+    mgf, cf, pdf, logpdf, cdf, fit,
 
 
 export Stable,
     rand,
     params, shape, location, scale, minimum, maximum,
     convert, convolve, +, *, partype, mean, var, skewness, kurtosis,
-    mgf, cf, pdf, logpdf, cdf, mgf, quantile, fit, fit_quantile
+    quantile_newton, cquantile_newton, invlogcdf_newton, invlogccdf_newton,
+    mgf, cf, pdf, logpdf, cdf, mgf, fit, fit_quantile,
 
 include("stable.jl")
 include("conversion.jl")
