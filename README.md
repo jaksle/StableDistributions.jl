@@ -27,4 +27,6 @@ One can use standard functions `rand(d::Stable)` for one value or `rand(d::Stabl
 
 ## Utility functions
 
+One can multiply stable distributions by scalars and add them, e.g. `2Stable(1.5) + 3` is a valid code which returns `Stable(1.5, 0, 2, 3)`. Function `convolve` is used to convolve two stable distributions with the same α, which is a distribution of the sum of two indepedent stable variables with such distributions. For example `convolve(Stable(0.5,1), Stable(0.5,0,2,1))` gives approximately `Stable(0.5, 0.41, 5.83, 1)`. Function `support` returns support of a given stable distribution, which can be half-bounded for skewed stable distribution with β = 1 or β = -1 and α < 1.
+
 [![Build Status](https://github.com/jaksle/StableDistributions.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/jaksle/StableDistributions.jl/actions/workflows/CI.yml?query=branch%3Amain)
