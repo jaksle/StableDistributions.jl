@@ -12,6 +12,7 @@ import Distributions: @check_args, @distr_support, @quantile_newton,
 
 
 export Stable,
+    rand,
     params, shape, location, scale, minimum, maximum,
     convert, convolve, partype, mean, var, skewness, kurtosis,
     mgf, cf, pdf, logpdf, cdf, mgf, +, *, fit, fit_quantile
