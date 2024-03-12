@@ -12,17 +12,19 @@ This package uses the so-called type-1 parametrisation determined by:
 
 Such distribution is uniquely characterised by its characteristic function (Fourier transform of its pdf)
 ```math
-\\varphi(t; \\alpha, \\beta, \\sigma, \\mu) = \\exp\\big(\\mathrm i t\\mu -|\\sigma t|^\\alpha(1-\\mathrm i\\beta\\mathrm{sgn}(t)\\Phi(t))\\big)
+\varphi(t; \alpha, \beta, \sigma, \mu) = \exp\big(\mathrm i t\mu -|\sigma t|^\alpha(1-\mathrm i\beta\mathrm{sgn}(t)\Phi(t))\big)
 ```
-with ``\\Phi(t) = -\\frac{2}{\\pi}\\log|t|`` for α = 1 or ``\\Phi(t) = \\tan(\\pi\\alpha/2)`` for α ≠ 1.
+with $\Phi(t) = -\frac{2}{\pi}\log|t|$ for α = 1 or $\Phi(t) = \tan(\pi\alpha/2)$ for α ≠ 1.
 
 To construct stable distribution one can use:
 - `Stable(α) ` for standard symmetric α-Stable distribution equivalent to Stable(α, 0, 1, 0),
 - `Stable(α, β)` for standard α-Stable distribution with skewness parameter β equivalent to S(α, β, 1, 0),
 - `Stable(α, β, σ, μ)` for any parameters.
 
-## Generating values stable distribution
+## Generating values from stable distribution
 
+One can use standard functions `rand(d::Stable)` for one value or `rand(d::Stable, shape)` for a series of values formatted with a given shape.
 
+## Utility functions
 
 [![Build Status](https://github.com/jaksle/StableDistributions.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/jaksle/StableDistributions.jl/actions/workflows/CI.yml?query=branch%3Amain)
