@@ -1,7 +1,7 @@
 module StableDistributions
 
 using Random
-using Random: rand, AbstractRNG
+import Random: rand, AbstractRNG
 using Distributions
 using SpecialFunctions
 using QuadGK: quadgk
