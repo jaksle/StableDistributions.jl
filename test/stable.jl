@@ -107,4 +107,11 @@ using Test, Distributions
         @test pdf(Stable(1, 0.25, 2., -1.), 0.0) ≈ 0.128031 atol = 1e-6
     end
 
+    @testset "quantile and related functions" begin
+        d = Stable(1.5)
+        @test quantile(d, 1/2) ≈ 0. atol = 1e-6
+        @test cquantile(d, 1/2) ≈ 0. atol = 1e-6
+        @test invlogcdf(d, log(1/2)) ≈ 0. atol = 1e-6
+        @test invlogccdf(d, log(1/2)) ≈ 0. atol = 1e-6
+    end
 end

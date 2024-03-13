@@ -3,7 +3,7 @@ using Test
 
 
 
-@testset "continuous univariate" begin
+@testset "convolve" begin
     @testset "Stable" begin
         @test_throws ArgumentError convolve(Stable(1),Stable(1.5))
         d1 = Stable(1.5, 1/2,2, 1)

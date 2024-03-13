@@ -4,13 +4,14 @@ using Random
 import Random: rand, AbstractRNG
 using Distributions
 using SpecialFunctions
-import QuadGK: quadgk
+using QuadGK: quadgk
+using StatsFuns: logexpm1, log1mexp
 import Distributions: @check_args, @distr_support,
     params, shape, location, scale, support, minimum, maximum,
     convert, convolve, +, *,
     partype, mean, var, skewness, kurtosis,
-    quantile_newton, cquantile_newton, invlogcdf_newton, invlogccdf_newton,
-    mgf, cf, pdf, logpdf, cdf, quantile, fit
+    mgf, cf, pdf, logpdf, cdf, fit,
+    quantile, cquantile, invlogcdf, invlogccdf
 
 
 export Stable,
@@ -21,6 +22,8 @@ export Stable,
     mgf, cf, pdf, logpdf, cdf, mgf, fit, fit_quantile,
     quantile, cquantile, invlogcdf, invlogccdf
 
+
+include("quantlinealgs.jl")
 include("stable.jl")
 include("conversion.jl")
 include("convolution.jl")

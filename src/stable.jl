@@ -182,10 +182,10 @@ function appr_mode(d::Stable{T}) where T
     return σ*β*κ + μ + σ*β*( α == one(T) ? 2log(σ)/π : tan(π*α/2) ) 
 end
 
-quantile(d::Stable, p::Real) = quantile_newton(d, p, appr_mode(d))
-cquantile(d::Stable, p::Real) = cquantile_newton(d, p, appr_mode(d))
-invlogcdf(d::Stable, p::Real) = invlogcdf_newton(d, p, appr_mode(d))
-invlogccdf(d::Stable, p::Real) = invlogccdf_newton(d, p, appr_mode(d))
+quantile(d::Stable, p::Real) = quantile_newton(d, p, appr_mode(d), 1e-6)
+cquantile(d::Stable, p::Real) = cquantile_newton(d, p, appr_mode(d), 1e-6)
+invlogcdf(d::Stable, p::Real) = invlogcdf_newton(d, p, appr_mode(d), 1e-6)
+invlogccdf(d::Stable, p::Real) = invlogccdf_newton(d, p, appr_mode(d), 1e-6)
 
 #### Affine transformations
 
