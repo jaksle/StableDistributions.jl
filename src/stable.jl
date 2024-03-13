@@ -172,9 +172,20 @@ function cdf(d::Stable{T}, x::Real) where T
     end
 end
 
-#quantile(d::Stable, p::Real) = Distributions.quantile_newton(d,p)
+# approximation from Nolan ch 3.2.2
+function appr_mode(d::Stable{T}) where T
+    α, β, σ, μ = params(d)
 
-@quantile_newton Stable
+    β ≈ 0. && return zero(T)
+
+    κ = α == one(T) ? (2Base.MathConstants.eulergamma - 3)/π : tan(π*α/2)*(gamma(1+2/α)/gamma(3/α) - 1)
+    return σ*β*κ + μ + σ*β*( α == one(T) ? 2log(σ)/π : tan(π*α/2) ) 
+end
+
+quantile(d::Stable, p::Real) = quantile_newton(d, p, appr_mode(d))
+cquantile(d::Stable, p::Real) = cquantile_newton(d, p, appr_mode(d))
+invlogcdf(d::Stable, p::Real) = invlogcdf_newton(d, p, appr_mode(d))
+invlogccdf(d::Stable, p::Real) = invlogccdf_newton(d, p, appr_mode(d))
 
 #### Affine transformations
 
