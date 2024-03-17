@@ -35,4 +35,4 @@ Method `convert` can be used to convert from special cases of Lévy, Cauchy and 
 
 ## Fitting
 
-Given data sample one can find best fitting stable distribution using method `fit(Stable, sample)`. It uses algorithm based on finding parameters which best fit sample characteristic function. This methods is considered to be efficient and quick. Alternatively, one can use `fit_quantile(Stable, sample)` which uses older McCulloch's quantile method. This method is considered to be generally worse but can be useful for additional checks, e.g. when there are doubts about the reliability of the estimation.
+Given data sample one can find best fitting stable distribution using method `fit(Stable, sample)`. It uses algorithm based on finding parameters which best fit sample characteristic function. This methods is considered to be efficient and quick. Alternatively, one can use `fit_quantile(Stable, sample)` which uses older McCulloch's quantile method in type-0 parametrisation. This method is considered to be generally worse but can be useful for additional checks, e.g. when there are doubts about the reliability of the estimation.
