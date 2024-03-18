@@ -6,7 +6,6 @@ using Distributions
 using SpecialFunctions
 using QuadGK: quadgk
 using StatsFuns: logexpm1, log1mexp
-import Interpolations: interpolate, Gridded, Linear
 import Distributions: @check_args, @distr_support,
     params, shape, location, scale, support, minimum, maximum,
     convert, convolve, +, *,
