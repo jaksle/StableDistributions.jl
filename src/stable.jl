@@ -227,11 +227,20 @@ end
 Compute the estimate of the [`Stable`](@ref) distribution with McCulloch's quantile method. The result is tuple with distribution's type-0 parameters.
 """
 function fit_quantile(::Type{<:Stable}, x::AbstractArray{<:Real})
+    function interpolate2D(x, y, xs, ys, M)
+        lx, ly = length(xs), length(ys)
+        i, j  = findlast(xs .<= x), findlast(ys .<= y)
+        i == lx && j < ly && return M[end, j]
+        j == ly && i < lx && return M[i, end]
+        i == lx && j == ly && return M[end,end]
+        x₁, x₂, y₁, y₂ = xs[i], xs[i+1], ys[j], ys[j+1]
+        m₁₁, m₁₂, m₂₁, m₂₂ = M[i, j], M[i, j+1], M[i+1, j], M[i+1, j+1]
+        return dot([x₂-x, x-x₁],  [m₁₁ m₁₂; m₂₁ m₂₂], [y₂-y; y-y₁]) / ( (x₂-x₁)*(y₂-y₁) )
+    end
     function ψ₁(x::Real,y::Real)
         i = [2.439, 2.5, 2.6, 2.7, 2.8, 3.0, 3.2, 3.5, 4.0, 5.0, 6.0, 8.0, 10.0, 15.0, 25.0]
         j = [0.0, 0.1, 0.2, 0.3, 0.5, 0.7, 1.0] 
         x = clamp(x, i[1], i[end])
-
         Ψ₁=[2.000 2.000 2.000 2.000 2.000 2.000 2.000;
             1.916 1.924 1.924 1.924 1.924 1.924 1.924;
             1.808 1.813 1.829 1.829 1.829 1.829 1.829;
@@ -247,8 +256,7 @@ function fit_quantile(::Type{<:Stable}, x::AbstractArray{<:Real})
             0.818 0.812 0.806 0.801 0.780 0.756 0.691;
             0.698 0.695 0.692 0.689 0.676 0.656 0.595;
             0.593 0.590 0.588 0.586 0.579 0.563 0.513]
-         itp = interpolate((i, j), Ψ₁, Gridded(Linear()))
-         return itp(x, abs(y))
+         return interpolate2D(x, y, i, j, Ψ₁)
     end
     
     function ψ₂(x::Real,y::Real)
@@ -271,8 +279,7 @@ function fit_quantile(::Type{<:Stable}, x::AbstractArray{<:Real})
             0.000 0.074 0.147 0.220 0.377 0.546 1.482;
             0.000 0.064 0.128 0.191 0.330 0.478 1.362;
             0.000 0.056 0.112 0.167 0.285 0.428 1.274]
-         itp = interpolate((i, j), Ψ₂, Gridded(Linear()))
-         return sign(y) * itp(x, abs(y))
+         return interpolate2D(x, y, i, j, Ψ₂)
     end
     
     function ψ₃(x::Real,y::Real)
@@ -296,8 +303,7 @@ function fit_quantile(::Type{<:Stable}, x::AbstractArray{<:Real})
             1.921 1.922 1.927 1.936 1.947;
             1.914 1.915 1.916 1.918 1.921;
             1.908 1.908 1.908 1.908 1.908]
-         itp = interpolate((i, j), Ψ₃, Gridded(Linear()))
-         return itp(x, abs(y))
+         return interpolate2D(x, y, i, j, Ψ₃)
     end
 
     function ψ₄(x::Real,y::Real) # this is ψ₅ in original McCuloch paper
@@ -321,8 +327,7 @@ function fit_quantile(::Type{<:Stable}, x::AbstractArray{<:Real})
             0.0 -0.030 -0.061 -0.092 -0.123;
             0.0 -0.017 -0.032 -0.049 -0.064;
             0.0  0.000  0.000  0.000  0.000]
-         itp = interpolate((i, j), Ψ₄, Gridded(Linear()))
-         return sign(y)*itp(x,abs(y))
+         return interpolate2D(x, y, i, j, Ψ₄)
     end
     
     q₉₅, q₇₅, q₅₀, q₂₅, q₀₅ = quantile(x,(0.95,0.75,0.50,0.25,0.05))
