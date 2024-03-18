@@ -1,7 +1,7 @@
 name = "StableDistributions"
 uuid = "3756410d-ab6e-41a2-9897-9aa267a7ef31"
 authors = ["Jakub Ślęzak <128084860+jaksle@users.noreply.github.com> and contributors"]
-version = "1.0.0"
+version = "1.0.1"
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
