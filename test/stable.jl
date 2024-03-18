@@ -1,4 +1,4 @@
-using Test, Distributions
+using Test, Distributions, StableDistributions
 
 @testset "Stable" begin
     
@@ -113,5 +113,11 @@ using Test, Distributions
         @test cquantile(d, 1/2) ≈ 0. atol = 1e-6
         @test invlogcdf(d, log(1/2)) ≈ 0. atol = 1e-6
         @test invlogccdf(d, log(1/2)) ≈ 0. atol = 1e-6
+    end
+
+    @testset "fit" begin
+        sample = rand(Stable(1.5,-0.5,1,2),1000)
+        @test fit_quantile(Stable, sample) isa Tuple{Float64, Float64, Float64, Float64}
+        @test fit(Stable, sample) isa Stable
     end
 end
