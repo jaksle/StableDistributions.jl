@@ -5,6 +5,7 @@ import Random: rand, AbstractRNG
 using Distributions
 using SpecialFunctions
 using QuadGK: quadgk
+using LinearAlgebra: dot
 using StatsFuns: logexpm1, log1mexp
 import Distributions: @check_args, @distr_support,
     params, shape, location, scale, support, minimum, maximum,
