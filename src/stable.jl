@@ -236,7 +236,8 @@ function fit_quantile(::Type{<:Stable}, x::AbstractArray{<:Real})
         i == lx && j == ly && return M[end,end]
         x₁, x₂, y₁, y₂ = xs[i], xs[i+1], ys[j], ys[j+1]
         m₁₁, m₁₂, m₂₁, m₂₂ = M[i, j], M[i, j+1], M[i+1, j], M[i+1, j+1]
-        return dot([x₂-x, x-x₁],  [m₁₁ m₁₂; m₂₁ m₂₂], [y₂-y; y-y₁]) / ( (x₂-x₁)*(y₂-y₁) )
+        xmy = (x₂-x) * (m₁₁*(y₂-y) + m₁₂*(y-y₁)) + (x-x₁) * (m₂₁*(y₂-y) + m₂₂*(y-y₁))
+        return xmy / ( (x₂-x₁)*(y₂-y₁) )
     end
 
     function ψ₁(x::Real,y::Real)
