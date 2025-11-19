@@ -1,5 +1,5 @@
 # StableDistributions.jl
-================
+========================
 
 [//]: <> [![Build Status]([https://github.com/JuliaStats/Distributions.jl](https://github.com/jaksle/StableDistributions.jl)/workflows/CI/badge.svg)]([https://github.com/JuliaStats/Distributions.jl](https://github.com/jaksle/StableDistributions.jl)/actions)
 
