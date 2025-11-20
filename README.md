@@ -1,5 +1,8 @@
 # StableDistributions.jl
 
+[![CI](https://github.com/jaksle/StableDistributions.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/jaksle/StableDistributions.jl/actions/workflows/CI.yml)
+[![codecov](https://codecov.io/github/jaksle/StableDistributions.jl/graph/badge.svg?token=Pvge67IhU8)](https://codecov.io/github//jaksle/StableDistributions.jl)
+
 Generation and estimation of the class of stable distributions (see on [Wikipedia](https://en.wikipedia.org/wiki/Stable_distribution)) in Julia. It fully complies with the interface of [Distributions.jl](https://github.com/JuliaStats/Distributions.jl) package. The algorithms are based on book John P. Nolan, "Univariate Stable Distributions", Springer 2020 and related publications of John P. Nolan.
 
 ## Defining stable distribution
