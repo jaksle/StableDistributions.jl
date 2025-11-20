@@ -1,8 +1,6 @@
 using Distributions
 using Test
 
-
-
 @testset "convolve" begin
     @testset "Stable" begin
         @test_throws ArgumentError convolve(Stable(1),Stable(1.5))
