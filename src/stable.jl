@@ -173,7 +173,7 @@ function cdf(d::Stable{T}, x::Real) where T
 end
 
 # approximation from Nolan ch 3.2.2
-function appr_mode(d::Stable{T}) where T
+function approx_mode(d::Stable{T}) where T
     α, β, σ, μ = params(d)
 
     β ≈ 0. && return zero(T)
@@ -182,10 +182,10 @@ function appr_mode(d::Stable{T}) where T
     return σ*β*κ + μ + σ*β*( α == one(T) ? 2log(σ)/π : tan(π*α/2) ) 
 end
 
-quantile(d::Stable, p::Real) = quantile_newton(d, p, appr_mode(d), 1e-6)
-cquantile(d::Stable, p::Real) = cquantile_newton(d, p, appr_mode(d), 1e-6)
-invlogcdf(d::Stable, p::Real) = invlogcdf_newton(d, p, appr_mode(d), 1e-6)
-invlogccdf(d::Stable, p::Real) = invlogccdf_newton(d, p, appr_mode(d), 1e-6)
+quantile(d::Stable, p::Real) = quantile_newton(d, p, approx_mode(d), 1e-6)
+cquantile(d::Stable, p::Real) = cquantile_newton(d, p, approx_mode(d), 1e-6)
+invlogcdf(d::Stable, p::Real) = invlogcdf_newton(d, p, approx_mode(d), 1e-6)
+invlogccdf(d::Stable, p::Real) = invlogccdf_newton(d, p, approx_mode(d), 1e-6)
 
 #### Affine transformations
 
