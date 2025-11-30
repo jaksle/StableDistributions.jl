@@ -108,6 +108,8 @@ using Test, Distributions, StableDistributions
     end
 
     @testset "quantile and related functions" begin
+        @test mode(Stable(1.3,0,1,42)) == 42
+        @test mode(Stable(1/2,1,1,1)) ≈ 4/3 atol = 1e-6
         d = Stable(1.5)
         @test quantile(d, 1/2) ≈ 0. atol = 1e-6
         @test cquantile(d, 1/2) ≈ 0. atol = 1e-6

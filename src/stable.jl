@@ -173,7 +173,7 @@ function cdf(d::Stable{T}, x::Real) where T
 end
 
 # approximation from Nolan ch 3.2.2
-function appr_mode(d::Stable{T}) where T
+function approx_mode(d::Stable{T}) where T
     α, β, σ, μ = params(d)
 
     β ≈ 0. && return zero(T)
@@ -182,10 +182,47 @@ function appr_mode(d::Stable{T}) where T
     return σ*β*κ + μ + σ*β*( α == one(T) ? 2log(σ)/π : tan(π*α/2) ) 
 end
 
-quantile(d::Stable, p::Real) = quantile_newton(d, p, appr_mode(d), 1e-6)
-cquantile(d::Stable, p::Real) = cquantile_newton(d, p, appr_mode(d), 1e-6)
-invlogcdf(d::Stable, p::Real) = invlogcdf_newton(d, p, appr_mode(d), 1e-6)
-invlogccdf(d::Stable, p::Real) = invlogccdf_newton(d, p, appr_mode(d), 1e-6)
+"""
+    mode(d::Stable, atol::Real = 1e-6, maxIter::Integer = 1024)
+
+Returns numerically approximated mode of the given stable distribution.
+"""
+function mode(d::Stable{T}, atol::Real = 1e-6, maxIter::Integer = 1024) where T
+    α, β, σ, μ =  params(d)
+    β ≈ zero(T) && return μ
+    
+    ϕ = (√5-1)/2
+    
+    # obtaining initial triplet
+    x₂ = approx_mode(d)
+    dx = abs(0.1 * x₂)
+    x₁, x₃ = x₂ - dx*ϕ, x₂ + dx
+    while pdf(d, x₁) >= pdf(d, x₂) || pdf(d, x₃) >= pdf(d, x₂)
+        dx *= 1.1
+        x₁, x₃ = x₂ - dx*ϕ, x₂ + dx
+    end
+
+    # golden-section search
+    i = 1
+    while x₃ - x₁ > ϕ*atol && i < maxIter
+        c = x₁ + x₃ - x₂
+        x₂, c = minmax(x₂, c)
+        if pdf(d, c) > pdf(d, x₂)
+            x₁, x₂, x₃ = x₂, c, x₃
+        else
+            x₁, x₂, x₃ = x₁, x₂, c
+        end
+        i += 1
+    end
+
+    return x₂
+end
+
+
+quantile(d::Stable, p::Real) = quantile_newton(d, p, approx_mode(d), 1e-6)
+cquantile(d::Stable, p::Real) = cquantile_newton(d, p, approx_mode(d), 1e-6)
+invlogcdf(d::Stable, p::Real) = invlogcdf_newton(d, p, approx_mode(d), 1e-6)
+invlogccdf(d::Stable, p::Real) = invlogccdf_newton(d, p, approx_mode(d), 1e-6)
 
 #### Affine transformations
 
