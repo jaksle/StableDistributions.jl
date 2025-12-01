@@ -14,7 +14,7 @@ This package uses the so-called type-1 parametrisation determined by:
 
 Such distribution is uniquely characterised by its characteristic function (Fourier transform of its pdf)
 ```math
-\varphi(t; \alpha, \beta, \sigma, \mu) = \exp\big(\mathrm i t\mu -|\sigma t|^\alpha(1-\mathrm i\beta\mathrm{sgn}(t)\Phi(t))\big)
+\varphi(t; \alpha, \beta, \sigma, \mu) = \exp\big(\mathrm{i}t\mu -|\sigma t|^\alpha(1-\mathrm i\beta\mathrm{sgn}(t)\Phi(t))\big)
 ```
 with $\Phi(t) = -\frac{2}{\pi}\log|t|$ for α = 1 or $\Phi(t) = \tan(\pi\alpha/2)$ for α ≠ 1.
 
