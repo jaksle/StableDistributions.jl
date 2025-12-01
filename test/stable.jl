@@ -55,9 +55,9 @@ using Test, Distributions, StableDistributions
     end
 
     @testset "pdf, cdf and mgf in special cases" begin
-        xs = LinRange(-5, 5, 20)
-        @test pdf.(Stable(2., 0., 2., 1.), xs) ≈ pdf.(Normal(1., 2√2), xs)
-        @test cdf.(Stable(2., 0., 2., 1.), xs) ≈ cdf.(Normal(1., 2√2), xs)
+        #xs = LinRange(-5, 5, 20)
+        @test pdf.(Stable(2., 0., 2., 1.), xs) ≈ pdf.(Normal(1., 2*√2), xs)
+        @test cdf.(Stable(2., 0., 2., 1.), xs) ≈ cdf.(Normal(1., 2*√2), xs)
         @test pdf.(Stable(1., 0., 3., -1.), xs) == pdf.(Cauchy(-1., 3.), xs)
         @test cdf.(Stable(1., 0., 3., -1.), xs) == cdf.(Cauchy(-1., 3.), xs)
         @test pdf.(Stable(0.5, 1., 2., 1.), xs) == pdf.(Levy(1., 2.), xs)
