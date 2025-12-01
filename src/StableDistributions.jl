@@ -11,7 +11,7 @@ import Distributions: @check_args, @distr_support,
     convert, convolve, +, *,
     partype, mean, var, skewness, kurtosis,
     mgf, cf, pdf, logpdf, cdf, fit,
-    quantile, cquantile, invlogcdf, invlogccdf
+    mode, quantile, cquantile, invlogcdf, invlogccdf
 
 
 export Stable,

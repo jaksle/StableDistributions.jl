@@ -56,8 +56,8 @@ using Test, Distributions, StableDistributions
 
     @testset "pdf, cdf and mgf in special cases" begin
         xs = LinRange(-5, 5, 20)
-        @test pdf.(Stable(2., 0., 2., 1.), xs) ≈ pdf.(Normal(1., 2√2), xs)
-        @test cdf.(Stable(2., 0., 2., 1.), xs) ≈ cdf.(Normal(1., 2√2), xs)
+        @test pdf.(Stable(2., 0., 2., 1.), xs) ≈ pdf.(Normal(1., 2*√2), xs)
+        @test cdf.(Stable(2., 0., 2., 1.), xs) ≈ cdf.(Normal(1., 2*√2), xs)
         @test pdf.(Stable(1., 0., 3., -1.), xs) == pdf.(Cauchy(-1., 3.), xs)
         @test cdf.(Stable(1., 0., 3., -1.), xs) == cdf.(Cauchy(-1., 3.), xs)
         @test pdf.(Stable(0.5, 1., 2., 1.), xs) == pdf.(Levy(1., 2.), xs)
@@ -108,6 +108,8 @@ using Test, Distributions, StableDistributions
     end
 
     @testset "quantile and related functions" begin
+        @test mode(Stable(1.3,0,1,42)) == 42
+        @test mode(Stable(1/2,1,1,1)) ≈ 4/3 atol = 1e-6
         d = Stable(1.5)
         @test quantile(d, 1/2) ≈ 0. atol = 1e-6
         @test cquantile(d, 1/2) ≈ 0. atol = 1e-6
