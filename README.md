@@ -1,6 +1,7 @@
 # StableDistributions.jl
 
 [![CI](https://github.com/jaksle/StableDistributions.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/jaksle/StableDistributions.jl/actions/workflows/CI.yml)
+[![codecov](https://codecov.io/gh/jaksle/StableDistributions.jl/branch/main/graph/badge.svg?token=E8VHSRSXXR)](https://codecov.io/gh/jaksle/StableDistributions.jl)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
 Generation and estimation of the class of stable distributions (see on [Wikipedia](https://en.wikipedia.org/wiki/Stable_distribution)) in Julia. It fully complies with the interface of [Distributions.jl](https://github.com/JuliaStats/Distributions.jl) package. The algorithms are based on book John P. Nolan, "Univariate Stable Distributions", Springer 2020 and related publications of John P. Nolan.
