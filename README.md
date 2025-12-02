@@ -10,7 +10,7 @@ This package uses the so-called type-1 parametrisation determined by:
 - stability index 0 < α ≤ 2,
 - skewness parameter -1 ≤ β ≤ 1,
 - scale 0 < σ,
-- location μ
+- location μ.
 
 Such distribution is uniquely characterised by its characteristic function (Fourier transform of its pdf)
 ```math
