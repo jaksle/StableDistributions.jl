@@ -116,8 +116,10 @@ using Test, Distributions, StableDistributions
         @test invlogcdf(d, log(1/2)) ≈ 0. atol = 1e-6
         @test invlogccdf(d, log(1/2)) ≈ 0. atol = 1e-6
         d = Stable(0.6, 1.)
-        @test quantile(d, 0) == 0.
-        @test quantile(d, 1) == Inf
+        @test quantile(d, 0) == cquantile(d, 1) == 0.
+        @test quantile(d, 1) == cquantile(d, 0) == Inf
+        @test invlogcdf(d, -Inf) == invlogccdf(d, 0) == 0.
+        @test invlogcdf(d, 0) == invlogccdf(d, -Inf) == Inf
     end
 
     @testset "fit" begin
