@@ -75,6 +75,7 @@ kurtosis(d::Stable{T}) where T = d.α == 2one(T) ? T(0.0) : T(NaN)
 function cf(d::Stable{T}, t::Real) where T
     α, β, σ, μ =  params(d)
     if α == one(T)
+        t == zero(T) && return one(complex(T))
         exp(im*t*μ - abs(σ*t) * (1 + im*β*2/π*sign(t)*log(abs(t))))
     else
         exp(im*t*μ - abs(σ*t)^α * (1 - im*β*sign(t)*tan(α*π/2)))
@@ -414,3 +415,4 @@ function fit(::Type{<:Stable}, x::AbstractArray{<:Real})
 
     return Stable(αₑₛₜ, βₑₛₜ, σₑₛₜ, μₑₛₜ)
 end
+
