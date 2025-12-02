@@ -18,6 +18,7 @@ using Test, Distributions, StableDistributions
     @testset "conversions" begin
         @test convert(Stable{Float64}, 1, 1, 1, 1) isa Stable{Float64}
         @test convert(Stable{BigFloat}, Stable(1., 1, 1, 1)) isa Stable{BigFloat}
+        @test convert(Stable{Float64}, Stable(1.5)) isa Stable{Float64}
     end
 
     @testset "parameters" begin
