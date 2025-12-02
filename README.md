@@ -23,11 +23,11 @@ To construct stable distribution one can use:
 - `Stable(α, β)` for standard α-stable distribution with skewness parameter β equivalent to Stable(α, β, 1, 0),
 - `Stable(α, β, σ, μ)` in general case.
 
-## Generating values from stable distribution
+## Sampling
 
 One can use standard functions `rand(d::Stable)` for one value or `rand(d::Stable, shape)` for a series of values formatted with a given shape.
 
-## Utility functions
+## Features
 
 Probability density function `pdf`, comultative probability function `cdf`, moment generating function `mgf`, characteristic function `cf`, quantiles `quantile`, and few ralated functions are also available. Values of `pdf`, `cdf` and `quantile` are approximate and based on numerical approximations of the corresponding integral representions and additional numerical function inversion for `quantile`. Maximum of the pdf can be numerically approximated using `mode`. For example, `pdf(Stable(1.5), 2)` returns pdf of `Stable(1.5)` at point x = 2 which is approximately `0.084`.
 
