@@ -123,6 +123,7 @@ using Test, Distributions, StableDistributions
         @test cquantile(d, 1/4) ≈ 1.0 atol = 1e-6
         @test invlogcdf(d,log(1/4)) ≈ -1.0 atol = 1e-6
         @test invlogccdf(d,log(3/4)) ≈ -1.0 atol = 1e-6
+        @test invlogccdf(d,log(1/4)) ≈ 1.0 atol = 1e-6
         d = Stable(0.6, 1.)
         @test quantile(d, 0) == cquantile(d, 1) == 0.
         @test quantile(d, 1) == cquantile(d, 0) == Inf
