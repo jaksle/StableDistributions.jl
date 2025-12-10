@@ -18,6 +18,7 @@ using Test, Distributions, StableDistributions
     @testset "conversions" begin
         @test convert(Stable{Float64}, 1, 1, 1, 1) isa Stable{Float64}
         @test convert(Stable{BigFloat}, Stable(1., 1, 1, 1)) isa Stable{BigFloat}
+        @test convert(Stable{Float64}, Stable(1.5)) isa Stable{Float64}
     end
 
     @testset "parameters" begin
@@ -115,6 +116,19 @@ using Test, Distributions, StableDistributions
         @test cquantile(d, 1/2) ≈ 0. atol = 1e-6
         @test invlogcdf(d, log(1/2)) ≈ 0. atol = 1e-6
         @test invlogccdf(d, log(1/2)) ≈ 0. atol = 1e-6
+        @test isnan(quantile(d, 42)) && isnan(cquantile(d, -42))
+        @test isnan(invlogcdf(d, 42)) && isnan(invlogccdf(d, 42))
+        d = Stable(1.0)
+        @test quantile(d, 3/4) ≈ 1.0 atol = 1e-6
+        @test cquantile(d, 1/4) ≈ 1.0 atol = 1e-6
+        @test invlogcdf(d,log(1/4)) ≈ -1.0 atol = 1e-6
+        @test invlogccdf(d,log(3/4)) ≈ -1.0 atol = 1e-6
+        @test invlogccdf(d,log(1/4)) ≈ 1.0 atol = 1e-6
+        d = Stable(0.6, 1.)
+        @test quantile(d, 0) == cquantile(d, 1) == 0.
+        @test quantile(d, 1) == cquantile(d, 0) == Inf
+        @test invlogcdf(d, -Inf) == invlogccdf(d, 0) == 0.
+        @test invlogcdf(d, 0) == invlogccdf(d, -Inf) == Inf
     end
 
     @testset "fit" begin

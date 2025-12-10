@@ -75,6 +75,7 @@ kurtosis(d::Stable{T}) where T = d.α == 2one(T) ? T(0.0) : T(NaN)
 function cf(d::Stable{T}, t::Real) where T
     α, β, σ, μ =  params(d)
     if α == one(T)
+        t == zero(T) && return one(complex(T))
         exp(im*t*μ - abs(σ*t) * (1 + im*β*2/π*sign(t)*log(abs(t))))
     else
         exp(im*t*μ - abs(σ*t)^α * (1 - im*β*sign(t)*tan(α*π/2)))
@@ -94,43 +95,51 @@ function pdf(d::Stable{T}, x::Real) where T
     α, β, σ, μ =  params(d)
 
     α == 2one(T) && return pdf(Normal(μ, √2σ),x)
-    α == one(T) && β == zero(T) && return pdf(Cauchy(μ,σ),x)
+    α == one(T) && β == zero(T) && return pdf(Cauchy(μ, σ),x)
     α == one(T)/2 && β == one(T) && return pdf(Levy(μ, σ), x)
     α == one(T)/2 && β == -one(T) && return pdf(Levy(-μ, σ), -x)
 
-    w(v,c) = v*c > 36. ? 0.0 : v*exp(-c*v) # numerical truncation
+    w(v,c) = v*c > 750. ? 0.0 : v*exp(-c*v) # numerical truncation
 
-    if α == one(T) 
-        V₁(θ) = 2/π*(π/2+β*θ)/cos(θ) * exp((π/2+β*θ)*tan(θ)/β)
+    if α ≈ one(T) 
+        V₁(θ, β) = 2/π*(π/2+β*θ)/cos(θ) * exp((π/2+β*θ)*tan(θ)/β)
 
         x = (x-μ)/σ - 2/π*β*log(σ) # normalize to S(1,β,1,0)
         x < 0 && ( (x, β, μ) = (-x, -β, -μ) ) # reflection property
 
-        I, _err = quadgk(θ -> w(V₁(θ),exp(-π*x/2β)), -π/2, π/2 ) 
+        I, _err = quadgk(θ -> w(V₁(θ, β),exp(-π*x/2β)), -π/2, π/2 ) 
 
         return 1/(2abs(β)*σ) * exp(-π*x/2β) * I
     else 
-        V(θ) =(cos(α*θ₀))^(1/(α-1)) * (cos(θ)/sin(α*(θ₀+θ)))^(α/(α-1)) * cos(α*θ₀ + (α-1)*θ)/cos(θ)
+        V(θ, α, θ₀) =(cos(α*θ₀))^(1/(α-1)) * (cos(θ)/sin(α*(θ₀+θ)))^(α/(α-1)) * cos(α*θ₀ + (α-1)*θ)/cos(θ)
 
         x = (x-μ)/σ # normalize to S(α,β,1,0)
         x < 0 && ( (x, β, μ) = (-x, -β, -μ) ) # reflection property
 
         θ₀ =  atan(β*tan(α*π/2))/α
-        x ≈ 0. && return gamma(1+1/α)*cos(θ₀)*(cos(α*θ₀))^(1/α) / π
-        
-        I, _err =  quadgk(θ -> w(V(θ), x^(α/(α-1)) ), -θ₀, π/2)
+        x ≈ 0. && return one(x)*gamma(1+1/α)*cos(θ₀)*(cos(α*θ₀))^(1/α) / π
+        if α < 1 && β > 0 # in this case the mass is concentrated on [-θ₀, -θ₀ + dθ]
+            dθ = π/2 - θ₀
+            I, _err = quadgk(θ -> w(V(θ, α, θ₀), x^(α/(α-1))), -θ₀, -θ₀ + dθ, π/2)
+        else
+            I, _err =  quadgk(θ -> w(V(θ, α, θ₀), x^(α/(α-1)) ), -θ₀, π/2)
+        end
 
+        if I ≈ 0 && x^(α/(α-1)) > 1e6 # singularity for very small x
+            I₂, _err2 = quadgk(t->cf(Stable(α, β),t)*cis(-t*x),-Inf,Inf) # less efficient, but stable for small x
+            return 1/2π * real(I₂)
+        end
         return α/σ * x^(1/(α-1)) / (π*abs(α-1)) * I
     end
 end
 
-function logpdf(d::Stable{T}, x::Real) where T
+function logpdf(d::Stable{T}, x::S) where {T<:Real, S<:Real}
     α, β, σ, μ = params(d)
     α == 2one(T) && return logpdf(Normal(μ, √2σ),x)
     α == one(T) && β == zero(T) && return logpdf(Cauchy(μ,σ),x)
     α == one(T)/2 && β == one(T) && return logpdf(Levy(μ, σ), x)
     α == one(T)/2 && β == -one(T) && return logpdf(Levy(-μ, σ), -x)
-    return log(pdf(d,x))
+    return minimum(d) < x < maximum(d) ? log(pdf(d,x)) : typemin(promote_type(S, T))
 end
 
 # integral representation from Nolan ch. 3
@@ -138,29 +147,42 @@ function cdf(d::Stable{T}, x::Real) where T
     α, β, σ, μ =  params(d)
 
     α == 2one(T) && return cdf(Normal(μ, √2σ),x)
-    β == zero(T) && return cdf(Cauchy(μ,σ),x)
+    β == zero(T) && return cdf(Cauchy(μ, σ),x)
     α == one(T)/2 && β == one(T) && return cdf(Levy(μ, σ), x)
     α == one(T)/2 && β == -one(T) && return 1 - cdf(Levy(-μ, σ), -x)
 
-    z(v,c) = v*c > 36. ? 0.0 : exp(-c*v) # numerical truncation
+    z(v,c) = v*c > 750. ? 0.0 : exp(-c*v) # numerical truncation
 
     function F(α, β, x) # works for x > 0
-        V(θ) =(cos(α*θ₀))^(1/(α-1)) * (cos(θ)/sin(α*(θ₀+θ)))^(α/(α-1)) * cos(α*θ₀ + (α-1)*θ)/cos(θ)
-        θ₀=  atan(β*tan(α*π/2))/α
-        x ≈ 0. && return (π/2 - θ₀)/π
+        V(θ, α, θ₀) = (cos(α*θ₀))^(1/(α-1)) * (cos(θ)/sin(α*(θ₀+θ)))^(α/(α-1)) * cos(α*θ₀ + (α-1)*θ)/cos(θ)
 
-        c = α > 1 ? 1. : (π/2 - θ₀)/π
-        I, _err =  quadgk(θ -> z(V(θ), x^(α/(α-1)) ), -θ₀, π/2)
-        return c + sign(1-α)/π * I
+        θ₀ =  atan(β*tan(α*π/2))/α
+        x ≈ 0. && return one(x)*(π/2 - θ₀)/π
+
+        a, b = -θ₀, π/2 
+        c = (a+b)/2
+        n = 1
+        while abs(V(c, α, θ₀)*x^(α/(α-1)) - 1) > 0.1 && n <= 1024 # bisection algoritm finds the point of change for V
+            if sign(V(a, α, θ₀)*x^(α/(α-1)) - 1) * sign(V(c, α, θ₀)*x^(α/(α-1)) - 1) > 0
+                a, b = c, b
+            else
+                a, b = a, c
+            end
+            n += 1
+            c = (a+b)/2
+        end
+        I, _err =  quadgk(θ -> z(V(θ, α, θ₀), x^(α/(α-1)) ), -θ₀, c, π/2)
+        s = α > 1 ? one(T) : (π/2 - θ₀)/π
+        return s + sign(1-α)/π * I
     end
 
     function F₁(β, x) # works for β > 0
-        V₁(θ) = 2/π*(π/2+β*θ)/cos(θ) * exp((π/2+β*θ)*tan(θ)/β)
-        I, _err = quadgk(θ -> z(V₁(θ),exp(-π*x/2β)), -π/2, π/2 ) 
+        V₁(θ, β) = 2/π*(π/2+β*θ)/cos(θ) * exp((π/2+β*θ)*tan(θ)/β)
+        I, _err = quadgk(θ -> z(V₁(θ, β),exp(-π*x/2β)), -π/2, π/2) 
         return 1/π * I
     end
 
-    if α == one(T) 
+    if α ≈ one(T) 
         x = (x-μ)/σ - 2/π*β*log(σ) # normalize to S(1,β,1,0)
         β < 0 && return 1 - F₁(-β, -x)
         return F₁(β, x)
@@ -414,3 +436,5 @@ function fit(::Type{<:Stable}, x::AbstractArray{<:Real})
 
     return Stable(αₑₛₜ, βₑₛₜ, σₑₛₜ, μₑₛₜ)
 end
+
+
