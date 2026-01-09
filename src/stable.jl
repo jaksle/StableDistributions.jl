@@ -117,7 +117,7 @@ function pdf(d::Stable{T}, x::Real) where T
         x < 0 && ( (x, β, μ) = (-x, -β, -μ) ) # reflection property
 
         θ₀ =  atan(β*tan(α*π/2))/α
-        x ≈ 0. && return one(x)*gamma(1+1/α)*cos(θ₀)*(cos(α*θ₀))^(1/α) / π
+        x ≈ 0. && return one(x)*gamma(1+1/α)*cos(θ₀)*(cos(α*θ₀))^(1/α) / (σ*π)
         if α < 1 && β > 0 # in this case the mass is concentrated on [-θ₀, -θ₀ + dθ]
             dθ = π/2 - θ₀
             I, _err = quadgk(θ -> w(V(θ, α, θ₀), x^(α/(α-1))), -θ₀, -θ₀ + dθ, π/2)
