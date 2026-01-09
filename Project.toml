@@ -1,7 +1,7 @@
 name = "StableDistributions"
 uuid = "3756410d-ab6e-41a2-9897-9aa267a7ef31"
 authors = ["Jakub Ślęzak <128084860+jaksle@users.noreply.github.com> and contributors"]
-version = "1.0.2"
+version = "1.0.3"
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
@@ -11,11 +11,11 @@ SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 StatsFuns = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 
 [compat]
-Distributions = ">=0.20"
+Distributions = "0.20, 0.21, 0.22, 0.23, 0.24, 0.25"
 Random = "<0.0.1, 1"
 QuadGK = "2"
 SpecialFunctions = "1.2, 2"
-StatsFuns = ">=0.9"
+StatsFuns = "0.9, 1"
 Test = "<0.0.1, 1"
 Aqua = "0.8"
 julia = "1.3"

@@ -1,5 +1,4 @@
 
-
 # variants of algorithms from Distributions.jl with added iteration number limits
 function quantile_newton(d::ContinuousUnivariateDistribution, p::Real, xs::Real=mode(d), tol::Real=1e-12, lim::Int = 10^6)
     x = xs + (p - cdf(d, xs)) / pdf(d, xs)
