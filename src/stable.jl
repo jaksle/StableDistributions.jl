@@ -147,7 +147,7 @@ function cdf(d::Stable{T}, x::Real) where T
     α, β, σ, μ =  params(d)
 
     α == 2one(T) && return cdf(Normal(μ, √2σ),x)
-    β == zero(T) && return cdf(Cauchy(μ, σ),x)
+    α == one(T) && β == zero(T) && return cdf(Cauchy(μ, σ),x)
     α == one(T)/2 && β == one(T) && return cdf(Levy(μ, σ), x)
     α == one(T)/2 && β == -one(T) && return 1 - cdf(Levy(-μ, σ), -x)
 
