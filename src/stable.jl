@@ -198,7 +198,7 @@ end
 function approx_mode(d::Stable{T}) where T
     α, β, σ, μ = params(d)
 
-    β ≈ 0. && return return μ
+    β ≈ 0. && return μ
 
     κ = α == one(T) ? (2Base.MathConstants.eulergamma - 3)/π : tan(π*α/2)*(gamma(1+2/α)/gamma(3/α) - 1)
     return σ*β*κ + μ + σ*β*( α == one(T) ? 2log(σ)/π : tan(π*α/2) ) 
