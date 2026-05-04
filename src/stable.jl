@@ -35,7 +35,7 @@ struct Stable{T<:Real} <: ContinuousUnivariateDistribution
     σ::T
     μ::T
     function Stable{T}(α, β, σ, μ; check_args::Bool=true) where {T}
-        @check_args Stable (α, zero(T) < α <= 2one(T)) (β, -one(T) <= β <= one(T)) (σ, zero(T) < σ) ((α, β), α != 2 || β == 0 )
+        @check_args Stable (α, zero(T) < α <= 2one(T)) (β, -one(T) <= β <= one(T)) (σ, zero(T) < σ) ((α, β), α != 2 || β == zero(β) )
         new{T}(α, β, σ, μ)
     end
 end
@@ -47,7 +47,7 @@ Stable(α::Integer, β::Integer, σ::Integer, μ::Integer; check_args::Bool=true
 Stable(α::Real, β::Real; check_args::Bool=true) = Stable(α, β, one(α), zero(α); check_args=check_args)
 Stable(α::Real; check_args::Bool=true) = Stable(α, zero(α); check_args=check_args)
 
-@distr_support Stable (d.α < 1 && d.β == 1 ? d.μ : -Inf) (d.α < 1 && d.β == -1 ? d.μ : Inf)
+@distr_support Stable (d.α < 1 && d.β == one(d.β) ? d.μ : typemin(d.μ)) (d.α < 1 && d.β == -one(d.β) ? d.μ : typemax(d.μ))
 
 #### Conversions
 
@@ -66,34 +66,34 @@ Base.eltype(::Type{Stable{T}}) where {T} = T
 #### Statistics
 
 mean(d::Stable{T}) where T = d.α > one(T) ? d.μ : T(NaN)
-var(d::Stable{T}) where T = d.α == 2one(T) ? 2d.σ^2 : T(Inf)
-skewness(d::Stable{T}) where T = d.α == 2one(T) ? T(0.0) : T(NaN)
-kurtosis(d::Stable{T}) where T = d.α == 2one(T) ? T(0.0) : T(NaN)
+var(d::Stable{T}) where T = d.α == 2one(T) ? 2d.σ^2 : typemax(T)
+skewness(d::Stable{T}) where T = d.α == 2one(T) ? zero(T) : T(NaN)
+kurtosis(d::Stable{T}) where T = d.α == 2one(T) ? zero(T) : T(NaN)
 
 #### Evaluation
 
 function cf(d::Stable{T}, t::Real) where T
     α, β, σ, μ =  params(d)
     if α == one(T)
-        t == zero(T) && return one(complex(T))
-        exp(im*t*μ - abs(σ*t) * (1 + im*β*2/π*sign(t)*log(abs(t))))
+        t == zero(T) && return one(complex(t))*one(T)
+        exp(im*t*μ - abs(σ*t) * (1 + 2im*β*invπ*sign(t)*log(abs(t))))
     else
-        exp(im*t*μ - abs(σ*t)^α * (1 - im*β*sign(t)*tan(α*π/2)))
+        exp(im*t*μ - abs(σ*t)^α * (1 - im*β*sign(t)*tanpi(α/2)))
     end
 end
 
 function mgf(d::Stable{T}, t::Real) where T
     if d.α == 2one(T)
-        mgf(Normal(d.μ, √2d.σ), t)
+        mgf(Normal(d.μ, sqrt2*d.σ), t)
     else
-        T(Inf)
+        typemax(T)*one(t)
     end
 end
 
 # integral representation from Nolan ch. 3
 function pdf(d::Stable{T}, x::Real) where T
     α, β, σ, μ =  params(d)
-    α == 2one(T) && return pdf(Normal(μ, √2σ),x)
+    α == 2one(T) && return pdf(Normal(μ, sqrt2*σ),x)
     α == one(T) && β == zero(T) && return pdf(Cauchy(μ, σ),x)
     α == one(T)/2 && β == one(T) && return pdf(Levy(μ, σ), x)
     α == one(T)/2 && β == -one(T) && return pdf(Levy(-μ, σ), -x)
@@ -103,7 +103,7 @@ function pdf(d::Stable{T}, x::Real) where T
     V(θ, α, θ₀) =(cos(α*θ₀))^(1/(α-1)) * (cos(θ)/sin(α*(θ₀+θ)))^(α/(α-1)) * cos(α*θ₀ + (α-1)*θ)/cos(θ)
 
     if α ≈ one(T) 
-        x = (x-μ)/σ - 2*(invπ*β*log(σ)) # normalize to S(1,β,1,0)
+        x = (x-μ)/σ - 2β*log(σ)*invπ # normalize to S(1,β,1,0)
         x < 0 && ( (x, β, μ) = (-x, -β, -μ) ) # reflection property
 
         I, _err = quadgk(θ -> w(V₁(θ, β),exp(-(π*x/2β))), -T(halfπ), T(halfπ) ) 
@@ -122,9 +122,9 @@ function pdf(d::Stable{T}, x::Real) where T
             I, _err =  quadgk(θ -> w(V(θ, α, θ₀), x^(α/(α-1)) ), -θ₀, halfπ)
         end
 
-        if I ≈ 0 && x^(α/(α-1)) > 1e6 # singularity for very small x
+        if I ≈ zero(I) && x^(α/(α-1)) > 1e6 # singularity for very small x
             I₂, _err2 = quadgk(t->cf(Stable(α, β),t)*cis(-t*x),typemin(x),typemax(x)) # less efficient, but stable for small x
-            return invπ/2 * real(I₂)
+            return invπ*real(I₂)/2
         end
         return α/σ * x^(1/(α-1)) / (π*abs(α-1)) * I
     end
@@ -143,8 +143,8 @@ end
 function cdf(d::Stable{T}, x::Real) where T
     α, β, σ, μ =  params(d)
 
-    α == 2one(T) && return cdf(Normal(μ, √2σ),x)
-    α == one(T) && β == zero(T) && return cdf(Cauchy(μ, σ),x)
+    α == 2one(T) && return cdf(Normal(μ, sqrt2*σ),x)
+    α == one(T) && β == zero(T) && return cdf(Cauchy(μ, σ), x)
     α == one(T)/2 && β == one(T) && return cdf(Levy(μ, σ), x)
     α == one(T)/2 && β == -one(T) && return 1 - cdf(Levy(-μ, σ), -x)
 
@@ -197,7 +197,7 @@ function approx_mode(d::Stable{T}) where T
 
     β ≈ zero(β) && return μ
 
-    κ = α == one(T) ? (2Base.MathConstants.eulergamma - 3)*invπ : tanpi(α/2)*(gamma(1+2/α)/gamma(3/α) - 1)
+    κ = α == one(T) ? (2T(Base.MathConstants.eulergamma) - 3)*invπ : tanpi(α/2)*(gamma(1+2/α)/gamma(3/α) - 1)
     return σ*β*κ + μ + σ*β*( α == one(T) ? 2log(σ)*invπ : tanpi(α/2) ) 
 end
 
@@ -248,7 +248,7 @@ invlogccdf(d::Stable, p::Real) = invlogccdf_newton(d, p, approx_mode(d))
 Base.:+(d::Stable, a::Real) = Stable(d.α, d.β, d.σ, d.μ + a)
 Base.:*(c::Real, d::Stable{T}) where T = 
     if d.α == one(T)
-        Stable(d.α, sign(c)*d.β, abs(c)*d.σ, c*d.μ - 2invπ*d.β*d.σ*c*log(abs(c)))
+        Stable(d.α, sign(c)*d.β, abs(c)*d.σ, c*d.μ - 2d.β*d.σ*c*log(abs(c))*invπ)
     else
         Stable(d.α, sign(c)*d.β, abs(c)*d.σ, c*d.μ)
     end
