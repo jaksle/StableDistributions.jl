@@ -147,7 +147,7 @@ function cdf(d::Stable{T}, x::Real) where T
     α, β, σ, μ =  params(d)
 
     α == 2one(T) && return cdf(Normal(μ, √2σ),x)
-    β == zero(T) && return cdf(Cauchy(μ, σ),x)
+    α == one(T) && β == zero(T) && return cdf(Cauchy(μ, σ),x)
     α == one(T)/2 && β == one(T) && return cdf(Levy(μ, σ), x)
     α == one(T)/2 && β == -one(T) && return 1 - cdf(Levy(-μ, σ), -x)
 
@@ -198,7 +198,7 @@ end
 function approx_mode(d::Stable{T}) where T
     α, β, σ, μ = params(d)
 
-    β ≈ 0. && return zero(T)
+    β ≈ 0. && return μ
 
     κ = α == one(T) ? (2Base.MathConstants.eulergamma - 3)/π : tan(π*α/2)*(gamma(1+2/α)/gamma(3/α) - 1)
     return σ*β*κ + μ + σ*β*( α == one(T) ? 2log(σ)/π : tan(π*α/2) ) 
@@ -436,6 +436,7 @@ function fit(::Type{<:Stable}, x::AbstractArray{<:Real})
 
     return Stable(αₑₛₜ, βₑₛₜ, σₑₛₜ, μₑₛₜ)
 end
+
 
 
 
