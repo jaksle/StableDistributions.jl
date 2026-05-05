@@ -264,7 +264,7 @@ function rand(rng::AbstractRNG, d::Stable{T})::T where T
     α == one(T)/2 && β == one(T) && return d.μ + d.σ / randn(rng, T)^2 # Lévy case
     α == one(T)/2 && β == -one(T) && return -(d.μ + d.σ / randn(rng, T)^2)
 
-    v = rand(rng, T) - 1//2
+    v = rand(rng, T) - 1//2 # note: for Float32 or lower standard cos(pi*v) can be negative, cospi is more stable
     w = randexp(rng, T)
 
     β == zero(T) && return σ  * ( sinpi(α*v)/cospi(v)^(1/α) * (cospi((1-α)*v)/w)^((1-α)/α) ) + μ # symmetric stable
