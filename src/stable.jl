@@ -93,8 +93,8 @@ end
 # integral representation from Nolan ch. 3
 function pdf(d::Stable{T}, x::Real) where T
     α, β, σ, μ =  params(d)
-    α == 2one(T) && return pdf(Normal(μ, sqrt2*σ),x)
-    α == one(T) && β == zero(T) && return pdf(Cauchy(μ, σ),x)
+    α == 2one(T) && return pdf(Normal(μ, sqrt2*σ), x)
+    α == one(T) && β == zero(T) && return pdf(Cauchy(μ, σ), x)
     α == one(T)/2 && β == one(T) && return pdf(Levy(μ, σ), x)
     α == one(T)/2 && β == -one(T) && return pdf(Levy(-μ, σ), -x)
 
@@ -106,14 +106,14 @@ function pdf(d::Stable{T}, x::Real) where T
         x = (x-μ)/σ - 2β*log(σ)*invπ # normalize to S(1,β,1,0)
         x < 0 && ( (x, β, μ) = (-x, -β, -μ) ) # reflection property
 
-        I, _err = quadgk(θ -> w(V₁(θ, β),exp(-(π*x/2β))), -T(halfπ), T(halfπ) ) 
+        I, _err = quadgk(θ -> w(V₁(θ, β),exp(-(π*x/2β))), -T(halfπ), T(halfπ) )
 
         return 1/(2abs(β)*σ) * exp(-(π*x/2β)) * I
     else 
         x = (x-μ)/σ # normalize to S(α,β,1,0)
         x < 0 && ( (x, β, μ) = (-x, -β, -μ) ) # reflection property
-
-        θ₀ =  atan(β*tan(α*halfπ))/α
+   
+        θ₀ = atan(β*tanpi(α/2))/α
         x ≈ zero(x) && return one(x)*gamma(1+1/α)*cos(θ₀)*(cos(α*θ₀))^(1/α) / (σ*π)
         if α < 1 && β > 0 # in this case the mass is concentrated on [-θ₀, -θ₀ + dθ]
             dθ = halfπ - θ₀
