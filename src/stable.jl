@@ -278,7 +278,7 @@ function rand(rng::AbstractRNG, d::Stable{T})::T where T
     w = randexp(rng, T)
 
     β == zero(T) && return σ  * ( sinpi(α*v)/cospi(v)^(1/α) * (cospi((1-α)*v)/w)^((1-α)/α) ) + μ # symmetric stable
-    α == one(T) && return σ * 2invπ*( (halfπ + π*β*v)*tanpi(v) - β*log( (w*cospi(v)/(1 + 2β*v)) ) ) + 2invπ*β*σ*log(σ) + μ # 1-stable
+    α == one(T) && return σ * 2( (halfπ + π*β*v)*tanpi(v) - β*log( (w*cospi(v)/(1 + 2β*v)) ) )*invπ + 2β*σ*log(σ)*invπ + μ # 1-stable
 
     b = atan(β*tanpi(α/2))/α
     return σ * sin(α*(π*v+b))/(cos(α*b) * cospi(v))^(1/α) * (cos(π*(1-α)*v - α*b)/w)^((1-α)/α) + μ # general case
