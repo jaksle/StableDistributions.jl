@@ -35,7 +35,7 @@ struct Stable{T<:Real} <: ContinuousUnivariateDistribution
     σ::T
     μ::T
     function Stable{T}(α, β, σ, μ; check_args::Bool=true) where {T}
-        @check_args Stable (α, zero(T) < α <= 2one(T)) (β, -one(T) <= β <= one(T)) (σ, zero(T) < σ) ((α, β), α != 2 || β == zero(β) )
+        @check_args Stable (α, zero(T) < α <= 2one(T)) (β, -one(T) <= β <= one(T)) (σ, zero(T) < σ) ((α, β), α != 2 || β == 0 )
         new{T}(α, β, σ, μ)
     end
 end
@@ -47,7 +47,7 @@ Stable(α::Integer, β::Integer, σ::Integer, μ::Integer; check_args::Bool=true
 Stable(α::Real, β::Real; check_args::Bool=true) = Stable(α, β, one(α), zero(α); check_args=check_args)
 Stable(α::Real; check_args::Bool=true) = Stable(α, zero(α); check_args=check_args)
 
-@distr_support Stable (d.α < 1 && d.β == one(d.β) ? d.μ : typemin(d.μ)) (d.α < 1 && d.β == -one(d.β) ? d.μ : typemax(d.μ))
+@distr_support Stable (d.α < 1 && d.β == 1 ? d.μ : -Inf) (d.α < 1 && d.β == -1 ? d.μ : Inf)
 
 #### Conversions
 
@@ -62,68 +62,72 @@ location(d::Stable) = d.μ
 scale(d::Stable) = d.σ
 params(d::Stable) = (d.α, d.β, d.σ, d.μ)
 partype(::Stable{T}) where {T} = T
-Base.eltype(::Type{Stable{T}}) where {T} = T
+
 #### Statistics
 
 mean(d::Stable{T}) where T = d.α > one(T) ? d.μ : T(NaN)
-var(d::Stable{T}) where T = d.α == 2one(T) ? 2d.σ^2 : typemax(T)
-skewness(d::Stable{T}) where T = d.α == 2one(T) ? zero(T) : T(NaN)
-kurtosis(d::Stable{T}) where T = d.α == 2one(T) ? zero(T) : T(NaN)
+var(d::Stable{T}) where T = d.α == 2one(T) ? 2d.σ^2 : T(Inf)
+skewness(d::Stable{T}) where T = d.α == 2one(T) ? T(0.0) : T(NaN)
+kurtosis(d::Stable{T}) where T = d.α == 2one(T) ? T(0.0) : T(NaN)
 
 #### Evaluation
 
 function cf(d::Stable{T}, t::Real) where T
     α, β, σ, μ =  params(d)
     if α == one(T)
-        t == zero(T) && return one(complex(t))*one(T)
-        exp(im*t*μ - abs(σ*t) * (1 + 2im*β*invπ*sign(t)*log(abs(t))))
+        t == zero(T) && return one(complex(T))
+        exp(im*t*μ - abs(σ*t) * (1 + im*β*2/π*sign(t)*log(abs(t))))
     else
-        exp(im*t*μ - abs(σ*t)^α * (1 - im*β*sign(t)*tanpi(α/2)))
+        exp(im*t*μ - abs(σ*t)^α * (1 - im*β*sign(t)*tan(α*π/2)))
     end
 end
 
 function mgf(d::Stable{T}, t::Real) where T
     if d.α == 2one(T)
-        mgf(Normal(d.μ, sqrt2*d.σ), t)
+        mgf(Normal(d.μ, √2d.σ), t)
     else
-        typemax(T)*one(t)
+        T(Inf)
     end
 end
 
 # integral representation from Nolan ch. 3
 function pdf(d::Stable{T}, x::Real) where T
     α, β, σ, μ =  params(d)
-    α == 2one(T) && return pdf(Normal(μ, sqrt2*σ), x)
-    α == one(T) && β == zero(T) && return pdf(Cauchy(μ, σ), x)
+
+    α == 2one(T) && return pdf(Normal(μ, √2σ),x)
+    α == one(T) && β == zero(T) && return pdf(Cauchy(μ, σ),x)
     α == one(T)/2 && β == one(T) && return pdf(Levy(μ, σ), x)
     α == one(T)/2 && β == -one(T) && return pdf(Levy(-μ, σ), -x)
 
-    w(v,c) = v*c > log(floatmax(v*c)) ? zero(c*v) : v*exp(-c*v) # numerical truncation
-    V₁(θ, β) = 2*(invπ*(halfπ+β*θ)/cos(θ)) * exp((halfπ+β*θ)*tan(θ)/β)
-    V(θ, α, θ₀) =(cos(α*θ₀))^(1/(α-1)) * (cos(θ)/sin(α*(θ₀+θ)))^(α/(α-1)) * cos(α*θ₀ + (α-1)*θ)/cos(θ)
+    w(v,c) = v*c > 750. ? 0.0 : v*exp(-c*v) # numerical truncation
 
     if α ≈ one(T) 
-        x = (x-μ)/σ - 2β*log(σ)*invπ # normalize to S(1,β,1,0)
-        x < 0 && ( (x, β, μ) = (-x, -β, -μ) ) # reflection property
-        I, _err = quadgk(θ -> w(V₁(θ, β),exp(-(π*x/2β))), -T(halfπ), T(halfπ) )
+        V₁(θ, β) = 2/π*(π/2+β*θ)/cos(θ) * exp((π/2+β*θ)*tan(θ)/β)
 
-        return 1/(2abs(β)*σ) * exp(-(π*x/2β)) * I
+        x = (x-μ)/σ - 2/π*β*log(σ) # normalize to S(1,β,1,0)
+        x < 0 && ( (x, β, μ) = (-x, -β, -μ) ) # reflection property
+
+        I, _err = quadgk(θ -> w(V₁(θ, β),exp(-π*x/2β)), -π/2, π/2 ) 
+
+        return 1/(2abs(β)*σ) * exp(-π*x/2β) * I
     else 
+        V(θ, α, θ₀) =(cos(α*θ₀))^(1/(α-1)) * (cos(θ)/sin(α*(θ₀+θ)))^(α/(α-1)) * cos(α*θ₀ + (α-1)*θ)/cos(θ)
+
         x = (x-μ)/σ # normalize to S(α,β,1,0)
         x < 0 && ( (x, β, μ) = (-x, -β, -μ) ) # reflection property
-   
-        θ₀ = atan(β*tanpi(α/2))/α
-        x ≈ zero(x) && return one(x)*gamma(1+1/α)*cos(θ₀)*(cos(α*θ₀))^(1/α) / (σ*π)
+
+        θ₀ =  atan(β*tan(α*π/2))/α
+        x ≈ 0. && return one(x)*gamma(1+1/α)*cos(θ₀)*(cos(α*θ₀))^(1/α) / (σ*π)
         if α < 1 && β > 0 # in this case the mass is concentrated on [-θ₀, -θ₀ + dθ]
-            dθ = halfπ - θ₀
-            I, _err = quadgk(θ -> w(V(θ, α, θ₀), x^(α/(α-1))), -θ₀, -θ₀ + dθ, halfπ)
+            dθ = π/2 - θ₀
+            I, _err = quadgk(θ -> w(V(θ, α, θ₀), x^(α/(α-1))), -θ₀, -θ₀ + dθ, π/2)
         else
-            I, _err =  quadgk(θ -> w(V(θ, α, θ₀), x^(α/(α-1)) ), -θ₀, halfπ)
+            I, _err =  quadgk(θ -> w(V(θ, α, θ₀), x^(α/(α-1)) ), -θ₀, π/2)
         end
 
-        if I ≈ zero(I) && x^(α/(α-1)) > 1e6 # singularity for very small x
-            I₂, _err2 = quadgk(t->cf(Stable(α, β),t)*cis(-t*x),typemin(x),typemax(x)) # less efficient, but stable for small x
-            return invπ*real(I₂)/2
+        if I ≈ 0 && x^(α/(α-1)) > 1e6 # singularity for very small x
+            I₂, _err2 = quadgk(t->cf(Stable(α, β),t)*cis(-t*x),-Inf,Inf) # less efficient, but stable for small x
+            return 1/2π * real(I₂)
         end
         return α/σ * x^(1/(α-1)) / (π*abs(α-1)) * I
     end
@@ -142,20 +146,20 @@ end
 function cdf(d::Stable{T}, x::Real) where T
     α, β, σ, μ =  params(d)
 
-    α == 2one(T) && return cdf(Normal(μ, sqrt2*σ),x)
-    α == one(T) && β == zero(T) && return cdf(Cauchy(μ, σ), x)
+    α == 2one(T) && return cdf(Normal(μ, √2σ),x)
+    α == one(T) && β == zero(T) && return cdf(Cauchy(μ, σ),x)
     α == one(T)/2 && β == one(T) && return cdf(Levy(μ, σ), x)
     α == one(T)/2 && β == -one(T) && return 1 - cdf(Levy(-μ, σ), -x)
 
-    z(v,c) = v*c > log(floatmax(v*c)) ? zero(c*v) : exp(-c*v) # numerical truncation
+    z(v,c) = v*c > 750. ? 0.0 : exp(-c*v) # numerical truncation
 
     function F(α, β, x) # works for x > 0
         V(θ, α, θ₀) = (cos(α*θ₀))^(1/(α-1)) * (cos(θ)/sin(α*(θ₀+θ)))^(α/(α-1)) * cos(α*θ₀ + (α-1)*θ)/cos(θ)
 
-        θ₀ = atan(β*tanpi(α/2))/α
-        x ≈ zero(x) && return one(x)*(halfπ - θ₀)*invπ
+        θ₀ =  atan(β*tan(α*π/2))/α
+        x ≈ 0. && return one(x)*(π/2 - θ₀)/π
 
-        a, b = -θ₀, halfπ 
+        a, b = -θ₀, π/2 
         c = (a+b)/2
         n = 1
         while abs(V(c, α, θ₀)*x^(α/(α-1)) - 1) > 0.1 && n <= 1024 # bisection algoritm finds the point of change for V
@@ -167,19 +171,19 @@ function cdf(d::Stable{T}, x::Real) where T
             n += 1
             c = (a+b)/2
         end
-        I, _err =  quadgk(θ -> z(V(θ, α, θ₀), x^(α/(α-1)) ), -θ₀, c, halfπ)
-        s = α > 1 ? one(T) : (halfπ - θ₀)*invπ
-        return s + sign(1-α)*invπ * I
+        I, _err =  quadgk(θ -> z(V(θ, α, θ₀), x^(α/(α-1)) ), -θ₀, c, π/2)
+        s = α > 1 ? one(T) : (π/2 - θ₀)/π
+        return s + sign(1-α)/π * I
     end
 
     function F₁(β, x) # works for β > 0
-        V₁(θ, β) = 2*(invπ*(halfπ+β*θ)/cos(θ)) * exp((halfπ+β*θ)*tan(θ)/β)
-        I, _err = quadgk(θ -> z(V₁(θ, β),exp(-π*x/2β)), -T(halfπ), T(halfπ)) 
-        return invπ * I
+        V₁(θ, β) = 2/π*(π/2+β*θ)/cos(θ) * exp((π/2+β*θ)*tan(θ)/β)
+        I, _err = quadgk(θ -> z(V₁(θ, β),exp(-π*x/2β)), -π/2, π/2) 
+        return 1/π * I
     end
 
     if α ≈ one(T) 
-        x = (x-μ)/σ - 2*(invπ*β*log(σ)) # normalize to S(1,β,1,0)
+        x = (x-μ)/σ - 2/π*β*log(σ) # normalize to S(1,β,1,0)
         β < 0 && return 1 - F₁(-β, -x)
         return F₁(β, x)
     else
@@ -194,10 +198,10 @@ end
 function approx_mode(d::Stable{T}) where T
     α, β, σ, μ = params(d)
 
-    β ≈ zero(β) && return μ
+    β ≈ 0. && return μ
 
-    κ = α == one(T) ? (2T(Base.MathConstants.eulergamma) - 3)*invπ : tanpi(α/2)*(gamma(1+2/α)/gamma(3/α) - 1)
-    return σ*β*κ + μ + σ*β*( α == one(T) ? 2log(σ)*invπ : tanpi(α/2) ) 
+    κ = α == one(T) ? (2Base.MathConstants.eulergamma - 3)/π : tan(π*α/2)*(gamma(1+2/α)/gamma(3/α) - 1)
+    return σ*β*κ + μ + σ*β*( α == one(T) ? 2log(σ)/π : tan(π*α/2) ) 
 end
 
 """
@@ -209,14 +213,14 @@ function mode(d::Stable{T}, atol::Real = 1e-6, maxIter::Integer = 1024) where T
     α, β, σ, μ =  params(d)
     β ≈ zero(T) && return μ
     
-    ϕ = (√T(5)-1)/2
+    ϕ = (√5-1)/2
     
     # obtaining initial triplet
     x₂ = approx_mode(d)
-    dx = abs(T(0.1) * x₂)
+    dx = abs(0.1 * x₂)
     x₁, x₃ = x₂ - dx*ϕ, x₂ + dx
     while pdf(d, x₁) >= pdf(d, x₂) || pdf(d, x₃) >= pdf(d, x₂)
-        dx *= T(1.1)
+        dx *= 1.1
         x₁, x₃ = x₂ - dx*ϕ, x₂ + dx
     end
 
@@ -237,17 +241,17 @@ function mode(d::Stable{T}, atol::Real = 1e-6, maxIter::Integer = 1024) where T
 end
 
 
-quantile(d::Stable, p::Real) = quantile_newton(d, p, approx_mode(d))
-cquantile(d::Stable, p::Real) = cquantile_newton(d, p, approx_mode(d))
-invlogcdf(d::Stable, p::Real) = invlogcdf_newton(d, p, approx_mode(d))
-invlogccdf(d::Stable, p::Real) = invlogccdf_newton(d, p, approx_mode(d))
+quantile(d::Stable, p::Real) = quantile_newton(d, p, approx_mode(d), 1e-6)
+cquantile(d::Stable, p::Real) = cquantile_newton(d, p, approx_mode(d), 1e-6)
+invlogcdf(d::Stable, p::Real) = invlogcdf_newton(d, p, approx_mode(d), 1e-6)
+invlogccdf(d::Stable, p::Real) = invlogccdf_newton(d, p, approx_mode(d), 1e-6)
 
 #### Affine transformations
 
 Base.:+(d::Stable, a::Real) = Stable(d.α, d.β, d.σ, d.μ + a)
 Base.:*(c::Real, d::Stable{T}) where T = 
     if d.α == one(T)
-        Stable(d.α, sign(c)*d.β, abs(c)*d.σ, c*d.μ - 2d.β*d.σ*c*log(abs(c))*invπ)
+        Stable(d.α, sign(c)*d.β, abs(c)*d.σ, c*d.μ - 2/π*d.β*d.σ*c*log(abs(c)))
     else
         Stable(d.α, sign(c)*d.β, abs(c)*d.σ, c*d.μ)
     end
@@ -255,22 +259,22 @@ Base.:*(c::Real, d::Stable{T}) where T =
 #### Sampling
 
 # A. Weron, R. Weron "Computer simulation of Lévy α-stable variables and processes", Springer 1995, doi: 10.1007/3-540-60188-0_6
-function rand(rng::AbstractRNG, d::Stable{T})::T where T
+function rand(rng::AbstractRNG, d::Stable{T}) where T
     (α, β, σ, μ) = params(d)
 
-    α == 2one(T) && return μ + sqrt2*σ*randn(rng, T) # Gaussian case
-    α == one(T) && β == zero(T) && return quantile(Cauchy(μ, σ), rand(rng, T)) # Cauchy case
-    α == one(T)/2 && β == one(T) && return d.μ + d.σ / randn(rng, T)^2 # Lévy case
-    α == one(T)/2 && β == -one(T) && return -(d.μ + d.σ / randn(rng, T)^2)
+    α == 2one(T) && return rand(rng, Normal(μ, √2σ)) # Gaussian case
+    α == one(T) && β == zero(T) && return rand(rng, Cauchy(μ, σ)) # Cauchy case
+    α == one(T)/2 && β == one(T) && return rand(rng,Levy(μ, σ)) # Lévy case
+    α == one(T)/2 && β == -one(T) && return -rand(rng,Levy(-μ, σ))
 
-    v = rand(rng, T) - 1//2 # note: for Float32 or lower standard cos(pi*v) can be negative, cospi is more stable
-    w = randexp(rng, T)
+    v = π*rand(rng) - π/2
+    w = randexp(rng)
 
-    β == zero(T) && return σ  * ( sinpi(α*v)/cospi(v)^(1/α) * (cospi((1-α)*v)/w)^((1-α)/α) ) + μ # symmetric stable
-    α == one(T) && return σ * 2invπ*( (halfπ + π*β*v)*tanpi(v) - β*log( (w*cospi(v)/(1 + 2β*v)) ) ) + 2invπ*β*σ*log(σ) + μ # 1-stable
+    β == zero(T) && return σ  * ( sin(α*v)/cos(v)^(1/α) * (cos((1-α)*v)/w)^((1-α)/α) ) + μ # symmetric stable
+    α == one(T) && return σ * 2/π*( (π/2 + β*v)*tan(v) - β*log( (π/2*w*cos(v)/(π/2 + β*v)) ) ) + 2/π*β*σ*log(σ) + μ # 1-stable
 
-    b = atan(β*tanpi(α/2))/α
-    return σ * sin(α*(π*v+b))/(cos(α*b) * cospi(v))^(1/α) * (cos(π*(1-α)*v - α*b)/w)^((1-α)/α) + μ # general case
+    b = atan(β*tan(π*α/2))/α
+    return σ * sin(α*(v+b))/(cos(α*b) * cos(v))^(1/α) * (cos((1-α)*v - α*b)/w)^((1-α)/α) + μ # general case
 end
 
 #### Fit model
