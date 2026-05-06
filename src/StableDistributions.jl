@@ -18,8 +18,8 @@ export Stable,
     rand,
     params, shape, location, scale, support, minimum, maximum,
     convert, convolve, +, *,
-    partype, mean, var, skewness, kurtosis,
-    mgf, cf, pdf, logpdf, cdf, mgf, fit, fit_quantile,
+    partype, mean, var, skewness, kurtosis, mode,
+    mgf, cf, pdf, logpdf, cdf, mgf, fit, fit_quantile
     quantile, cquantile, invlogcdf, invlogccdf
 
 
