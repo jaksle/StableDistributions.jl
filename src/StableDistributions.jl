@@ -6,6 +6,8 @@ using Distributions
 using SpecialFunctions
 using QuadGK: quadgk
 using StatsFuns: logexpm1, log1mexp
+using PDMats, FillArrays, LinearAlgebra
+import Base: size, length
 import Distributions: @check_args, @distr_support,
     params, shape, location, scale, support, minimum, maximum,
     convert, convolve, +, *,
@@ -14,7 +16,7 @@ import Distributions: @check_args, @distr_support,
     mode, quantile, cquantile, invlogcdf, invlogccdf
 
 
-export Stable,
+export Stable, EllipticStable,
     rand,
     params, shape, location, scale, support, minimum, maximum,
     convert, convolve, +, *,
@@ -27,5 +29,7 @@ include("quantlinealgs.jl")
 include("stable.jl")
 include("conversion.jl")
 include("convolution.jl")
+
+include("elliptic.jl")
 
 end
