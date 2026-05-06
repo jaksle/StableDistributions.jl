@@ -63,3 +63,4 @@ LinearAlgebra.dot(d::EllipticStable, b::AbstractVector) = b ⋅ d
 #### Evaluation
 
 cf(d::EllipticStable, t::AbstractVector{<:Real}) = exp(-(quad(d.Σ, t))^(d.α/2) + im*d.μ ⋅ t)
+cf(d::EllipticStable, t::AbstractMatrix{<:Real}) = exp.(-quad(d.Σ, t) .^(d.α/2) .+ im*t' * d.μ)
