@@ -99,19 +99,17 @@ function pdf(d::Stable{T}, x::Real) where T
     α == one(T)/2 && β == -one(T) && return pdf(Levy(-μ, σ), -x)
 
     w(v,c) = v*c > log(floatmax(v*c)) ? zero(c*v) : v*exp(-c*v) # numerical truncation
-    V₁(θ, β) = 2*(invπ*(halfπ+β*θ)/cos(θ)) * exp((halfπ+β*θ)*tan(θ)/β)
-    V(θ, α, θ₀) =(cos(α*θ₀))^(1/(α-1)) * (cos(θ)/sin(α*(θ₀+θ)))^(α/(α-1)) * cos(α*θ₀ + (α-1)*θ)/cos(θ)
 
-    if α ≈ one(T) 
-        x = (x-μ)/σ - 2β*log(σ)*invπ # normalize to S(1,β,1,0)
-        x < 0 && ( (x, β, μ) = (-x, -β, -μ) ) # reflection property
+    function p₁(x, β, σ)
+        V₁(θ, β) = 2*(invπ*(halfπ+β*θ)/cos(θ)) * exp((halfπ+β*θ)*tan(θ)/β)
+        (x, β) = ifelse(x < 0, (-x, -β), (x, β) ) # reflection property
         I, _err = quadgk(θ -> w(V₁(θ, β),exp(-(π*x/2β))), -T(halfπ), T(halfπ) )
-
         return 1/(2abs(β)*σ) * exp(-(π*x/2β)) * I
-    else 
-        x = (x-μ)/σ # normalize to S(α,β,1,0)
-        x < 0 && ( (x, β, μ) = (-x, -β, -μ) ) # reflection property
-   
+    end
+
+    function p(x, α, β, σ)
+        V(θ, α, θ₀) =(cos(α*θ₀))^(1/(α-1)) * (cos(θ)/sin(α*(θ₀+θ)))^(α/(α-1)) * cos(α*θ₀ + (α-1)*θ)/cos(θ)
+        (x, β) = ifelse(x < 0, (-x, -β), (x, β) ) # reflection property
         θ₀ = atan(β*tanpi(α/2))/α
         x ≈ zero(x) && return one(x)*gamma(1+1/α)*cos(θ₀)*(cos(α*θ₀))^(1/α) / (σ*π)
         if α < 1 && β > 0 # in this case the mass is concentrated on [-θ₀, -θ₀ + dθ]
@@ -126,6 +124,12 @@ function pdf(d::Stable{T}, x::Real) where T
             return invπ*real(I₂)/2
         end
         return α/σ * x^(1/(α-1)) / (π*abs(α-1)) * I
+    end
+
+    if α ≈ one(T)
+        return p₁((x-μ)/σ - 2β*log(σ)*invπ, β, σ) # pdf of normalised to S(1,β,1,0)
+    else
+        return p((x-μ)/σ, α, β, σ) # pdf of normalised to S(α,β,1,0)
     end
 end
 
@@ -172,9 +176,9 @@ function cdf(d::Stable{T}, x::Real) where T
         return s + sign(1-α)*invπ * I
     end
 
-    function F₁(β, x) # works for β > 0
-        V₁(θ, β) = 2*(invπ*(halfπ+β*θ)/cos(θ)) * exp((halfπ+β*θ)*tan(θ)/β)
-        I, _err = quadgk(θ -> z(V₁(θ, β),exp(-π*x/2β)), -T(halfπ), T(halfπ)) 
+    function F₁(β, x::T) where T # works for β > 0
+        V₁(θ, β) = (1+2β*θ*invπ)/cos(θ) * exp((halfπ+β*θ)*tan(θ)/β)
+        I, _err = quadgk(θ -> z(V₁(θ, β),exp(-(π*x)/2β)), -T(halfπ), T(halfπ)) 
         return invπ * I
     end
 
