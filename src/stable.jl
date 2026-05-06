@@ -90,7 +90,7 @@ function mgf(d::Stable{T}, t::Real) where T
     end
 end
 
-# integral representation from Nolan ch. 3
+# integral representations from Nolan ch. 3
 function pdf(d::Stable{T}, x::Real) where T
     α, β, σ, μ =  params(d)
     α == 2one(T) && return pdf(Normal(μ, sqrt2*σ), x)
@@ -100,18 +100,24 @@ function pdf(d::Stable{T}, x::Real) where T
 
     w(v,c) = v*c > log(floatmax(v*c)) ? zero(c*v) : v*exp(-c*v) # numerical truncation
 
-    function p₁(x, β, σ)
+    function p₁(x, β, σ) # inner functions help with type-stability and testing
+        x = (x-μ)/σ - 2β*log(σ)*invπ # normalisation
         V₁(θ, β) = 2*(invπ*(halfπ+β*θ)/cos(θ)) * exp((halfπ+β*θ)*tan(θ)/β)
         (x, β) = ifelse(x < 0, (-x, -β), (x, β) ) # reflection property
+
         I, _err = quadgk(θ -> w(V₁(θ, β),exp(-(π*x/2β))), -T(halfπ), T(halfπ) )
+
         return 1/(2abs(β)*σ) * exp(-(π*x/2β)) * I
     end
 
     function p(x, α, β, σ)
+        x = (x-μ)/σ # normalisation
         V(θ, α, θ₀) =(cos(α*θ₀))^(1/(α-1)) * (cos(θ)/sin(α*(θ₀+θ)))^(α/(α-1)) * cos(α*θ₀ + (α-1)*θ)/cos(θ)
         (x, β) = ifelse(x < 0, (-x, -β), (x, β) ) # reflection property
         θ₀ = atan(β*tanpi(α/2))/α
+
         x ≈ zero(x) && return one(x)*gamma(1+1/α)*cos(θ₀)*(cos(α*θ₀))^(1/α) / (σ*π)
+
         if α < 1 && β > 0 # in this case the mass is concentrated on [-θ₀, -θ₀ + dθ]
             dθ = halfπ - θ₀
             I, _err = quadgk(θ -> w(V(θ, α, θ₀), x^(α/(α-1))), -θ₀, -θ₀ + dθ, halfπ)
@@ -123,13 +129,14 @@ function pdf(d::Stable{T}, x::Real) where T
             I₂, _err2 = quadgk(t->cf(Stable(α, β),t)*cis(-t*x),typemin(x),typemax(x)) # less efficient, but stable for small x
             return invπ*real(I₂)/2
         end
+
         return α/σ * x^(1/(α-1)) / (π*abs(α-1)) * I
     end
 
     if α ≈ one(T)
-        return p₁((x-μ)/σ - 2β*log(σ)*invπ, β, σ) # pdf of normalised to S(1,β,1,0)
+        return p₁(x, β, σ) 
     else
-        return p((x-μ)/σ, α, β, σ) # pdf of normalised to S(α,β,1,0)
+        return p(x, α, β, σ)
     end
 end
 
