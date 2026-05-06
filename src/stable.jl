@@ -210,6 +210,7 @@ end
 Returns numerically approximated mode of the given stable distribution.
 """
 function mode(d::Stable{T}, atol::Real = 1e-6, maxIter::Integer = 1024) where T
+    α, β, σ, μ =  params(d)
     β ≈ zero(T) && return μ
     
     ϕ = (√T(5)-1)/2
