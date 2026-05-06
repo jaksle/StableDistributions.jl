@@ -25,14 +25,13 @@ end
 
 EllipticStable(α, Σ::AbstractMatrix{<:Real}, μ::AbstractVector{<:Real}) = 
     EllipticStable(α, PDMat(Σ), μ)
-EllipticStable(α, μ::AbstractVector{<:Real}, Σ::Diagonal{<:Real}) = 
+EllipticStable(α, Σ::Diagonal{<:Real}, μ::AbstractVector{<:Real}) = 
     EllipticStable(α, PDiagMat(Σ.diag), μ)
-EllipticStable(α, Σ::Union{Symmetric{<:Real,<:Diagonal{<:Real}},Hermitian{<:Real,<:Diagonal{<:Real}}}, μ::AbstractVector{<:Real}, ) = 
-    EllipticStable(α, PDiagMat(Σ.data.diag), μ)
+EllipticStable(α, Σ::Union{Symmetric{<:Real,<:Diagonal{<:Real}},Hermitian{<:Real,<:Diagonal{<:Real}}}, μ::AbstractVector{<:Real} ) = 
     EllipticStable(α, PDiagMat(Σ.data.diag), μ)
 EllipticStable(α, Σ::UniformScaling{<:Real}, μ::AbstractVector{<:Real}) =
     EllipticStable(α, ScalMat(length(μ), Σ.λ), μ)
-EllipticStable(α, Σ::Diagonal{<:Real,<:FillArrays.AbstractFill{<:Real,1}}, μ::AbstractVector{<:Real})
+EllipticStable(α, Σ::Diagonal{<:Real,<:FillArrays.AbstractFill{<:Real,1}}, μ::AbstractVector{<:Real}) = 
     EllipticStable(α, ScalMat(size(Σ, 1), FillArrays.getindex_value(Σ.diag)), μ)
 
 EllipticStable(α, Σ::AbstractMatrix{<:Real}) = 
@@ -50,15 +49,15 @@ Base.eltype(::Type{<:MvNormal{T}}) where {T} = T
 
 ### Affine transformations
 
-Base.:+(d::EllipticStable, c::AbstractVector) = EllipticStable(α, d.Σ, μ + c)
+Base.:+(d::EllipticStable, c::AbstractVector) = EllipticStable(d.α, d.Σ, μ + c)
 Base.:+(c::AbstractVector, d::EllipticStable) = d + c
-Base.:-(d::MvNormal, c::AbstractVector) = EllipticStable(α, d.Σ, d.μ - c)
+Base.:-(d::EllipticStable, c::AbstractVector) = EllipticStable(d.α, d.Σ, d.μ - c)
 
-Base.:*(B::AbstractMatrix, d::EllipticStable) = EllipticStable(α, X_A_Xt(d.Σ, B), B * d.μ)
+Base.:*(B::AbstractMatrix, d::EllipticStable) = EllipticStable(d.α, X_A_Xt(d.Σ, B), B * d.μ)
 
-Base.:⋅(b::AbstractVector, d::EllipticStable) = Stable(α, 0, √quad(d.Σ, b), d.μ ⋅ b) # ?
+LinearAlgebra.dot(b::AbstractVector, d::EllipticStable) = Stable(d.α, 0, √quad(d.Σ, b), d.μ ⋅ b) # ?
 
-Base.:⋅(d::EllipticStable, b::AbstractVector) = b ⋅ d
+LinearAlgebra.dot(d::EllipticStable, b::AbstractVector) = b ⋅ d
 
 
 #### Evaluation
