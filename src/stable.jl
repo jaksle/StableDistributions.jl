@@ -105,7 +105,6 @@ function pdf(d::Stable{T}, x::Real) where T
     if α ≈ one(T) 
         x = (x-μ)/σ - 2β*log(σ)*invπ # normalize to S(1,β,1,0)
         x < 0 && ( (x, β, μ) = (-x, -β, -μ) ) # reflection property
-
         I, _err = quadgk(θ -> w(V₁(θ, β),exp(-(π*x/2β))), -T(halfπ), T(halfπ) )
 
         return 1/(2abs(β)*σ) * exp(-(π*x/2β)) * I
