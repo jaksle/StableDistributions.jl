@@ -1,11 +1,6 @@
 
 abstract type AbstractMvStable <: ContinuousMultivariateDistribution end
 
-insupport(d::AbstractMvNormal, x::AbstractVector) =
-    length(d) == length(x) && all(isfinite, x)
-
-minimum(d::EllipticStable) = fill(typemin(eltype(d)), length(d))
-maximum(d::EllipticStable) = fill(typemax(eltype(d)), length(d))
 
 struct EllipticStable{T<:Real,Cov<:AbstractPDMat,Mean<:AbstractVector} <: AbstractMvStable
     α::T
@@ -37,6 +32,12 @@ EllipticStable(α, Σ::Diagonal{<:Real,<:FillArrays.AbstractFill{<:Real,1}}, μ:
 EllipticStable(α, Σ::AbstractMatrix{<:Real}) = 
     EllipticStable(α, Σ, Zeros{eltype(Σ)}(size(Σ, 1))) # default μ = [0, 0, ...]
 
+insupport(d::EllipticStable, x::AbstractVector) =
+    length(d) == length(x) && all(isfinite, x)
+
+minimum(d::EllipticStable) = fill(typemin(eltype(d)), length(d))
+maximum(d::EllipticStable) = fill(typemax(eltype(d)), length(d))
+
 
 #### Parameters
 
@@ -44,7 +45,7 @@ length(d::EllipticStable) = length(d.μ)
 params(d::EllipticStable) = (d.α, d.Σ, d.μ)
 location(d::EllipticStable) = d.μ
 mode(d::EllipticStable) = d.μ
-Base.eltype(::Type{<:MvNormal{T}}) where {T} = T
+Base.eltype(::Type{<:EllipticStable{T}}) where {T} = T
 
 #### Conversion
 convert(::Type{EllipticStable{T}}, d::EllipticStable) where T<:Real =
@@ -75,12 +76,15 @@ cf(d::EllipticStable, t::AbstractVector{<:Real}) = exp(-(quad(d.Σ, t))^(d.α/2)
 cf(d::EllipticStable, t::AbstractMatrix{<:Real}) = exp.(-quad(d.Σ, t) .^(d.α/2) .+ im*t' * d.μ)
 
 
+function _rand!(rng::AbstractRNG, d::EllipticStable, x::VecOrMat)
+    unwhiten!(d.Σ, randn!(rng, x))
+    x .= √rand(rng, Stable(d.α/2, 1, 2(cospi(d.α/4))^(2/d.α), 0)) .* x .+ d.μ
+end
 
 function _rand!(rng::AbstractRNG, d::EllipticStable, x::AbstractVector) 
     for i in eachindex(x)   
         x[i] = randn(rng, eltype(x))
     end
     unwhiten!(d.Σ, x)
-    x .= √rand(Stable(d.α/2), 1, 2(cospi(α/4))^(2/d.α), 0) .* x .+ d.μ
-    return x
+    x .= √rand(rng, Stable(d.α/2, 1, 2(cospi(d.α/4))^(2/d.α), 0)) .* x .+ d.μ
 end
