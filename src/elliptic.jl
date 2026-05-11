@@ -4,8 +4,8 @@ abstract type AbstractMvStable <: ContinuousMultivariateDistribution end
 insupport(d::AbstractMvNormal, x::AbstractVector) =
     length(d) == length(x) && all(isfinite, x)
 
-minimum(d::AbstractMvNormal) = fill(typemin(eltype(d)), length(d))
-maximum(d::AbstractMvNormal) = fill(typemax(eltype(d)), length(d))
+minimum(d::EllipticStable) = fill(typemin(eltype(d)), length(d))
+maximum(d::EllipticStable) = fill(typemax(eltype(d)), length(d))
 
 struct EllipticStable{T<:Real,Cov<:AbstractPDMat,Mean<:AbstractVector} <: AbstractMvStable
     α::T
@@ -46,8 +46,18 @@ location(d::EllipticStable) = d.μ
 mode(d::EllipticStable) = d.μ
 Base.eltype(::Type{<:MvNormal{T}}) where {T} = T
 
+#### Conversion
+convert(::Type{EllipticStable{T}}, d::EllipticStable) where T<:Real =
+    EllipticStable(convert(T, d.α), convert(AbstractArray{T}, d.Σ), convert(AbstractArray{T}, d.μ))
 
-### Affine transformations
+Base.convert(::Type{EllipticStable{T}}, d::EllipticStable{T}) where {T<:Real} = d
+
+convert(::Type{EllipticStable{T}}, α::Real, Σ::AbstractPDMat, μ::AbstractVector) where T<:Real =
+    EllipticStable(convert(T, α), convert(AbstractArray{T}, Σ), convert(AbstractArray{T}, μ))
+
+
+
+#### Affine transformations
 
 Base.:+(d::EllipticStable, c::AbstractVector) = EllipticStable(d.α, d.Σ, μ + c)
 Base.:+(c::AbstractVector, d::EllipticStable) = d + c
@@ -59,8 +69,18 @@ LinearAlgebra.dot(b::AbstractVector, d::EllipticStable) = Stable(d.α, 0, √qua
 
 LinearAlgebra.dot(d::EllipticStable, b::AbstractVector) = b ⋅ d
 
-
 #### Evaluation
 
 cf(d::EllipticStable, t::AbstractVector{<:Real}) = exp(-(quad(d.Σ, t))^(d.α/2) + im*d.μ ⋅ t)
 cf(d::EllipticStable, t::AbstractMatrix{<:Real}) = exp.(-quad(d.Σ, t) .^(d.α/2) .+ im*t' * d.μ)
+
+
+
+function _rand!(rng::AbstractRNG, d::EllipticStable, x::AbstractVector) 
+    for i in eachindex(x)   
+        x[i] = randn(rng, eltype(x))
+    end
+    unwhiten!(d.Σ, x)
+    x .= √rand(Stable(d.α/2), 1, 2(cospi(α/4))^(2/d.α), 0) .* x .+ d.μ
+    return x
+end
